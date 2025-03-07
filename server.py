@@ -19,7 +19,16 @@ def obtener_precio():
 
     for item in precios:
         if item["parking"] == parking and item["fecha"] == fecha and item["tiempo"] == tiempo:
-            return jsonify({"price": item["price"]})
+            # Devolver el JSON completo que contiene todos los detalles
+            return jsonify({
+                "priceId": item["priceId"],
+                "parking": item["parking"],
+                "fecha": item["fecha"],
+                "tiempo": item["tiempo"],
+                "price": item["price"],
+                "product": item["product"],
+                "availablePlaces": item["availablePlaces"]
+            })
 
     return jsonify({"error": "No se encontró un precio para esos parámetros"}), 404
 

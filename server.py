@@ -21,9 +21,24 @@ def obtener_precio():
     tiempo = request.args.get("tiempo")
 
     # Buscar el precio correspondiente
+    total_precio = 0
     for item in precios:
-        if item["parking"] == parking and item["fecha"] == fecha and item["tiempo"] == tiempo:
-            return jsonify({"price": item["price"]})
+        if item["parking"] == parking and item["fecha"] == fecha:
+            # Lógica para manejar tiempo combinado
+            if "hour" in tiempo and "day" in tiempo:
+                horas = int(tiempo.split(" ")[0])  # 2 horas
+                dias = int(tiempo.split(" ")[2])  # 3 días
+                # Buscar precios específicos de horas y días
+                for i in precios:
+                    if i["tiempo"] == f"{horas} hours":
+                        total_precio += float(i["price"])
+                    if i["tiempo"] == f"{dias} days":
+                        total_precio += float(i["price"])
+                return jsonify({"price": total_precio})
+            
+            # Buscar precio si es solo por tiempo exacto
+            if item["tiempo"] == tiempo:
+                return jsonify({"price": item["price"]})
     
     return jsonify({"error": "No se encontró un precio para esos parámetros"}), 404
 

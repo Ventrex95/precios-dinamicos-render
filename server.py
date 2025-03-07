@@ -18,25 +18,33 @@ def obtener_precio():
     fecha = request.args.get("fecha")
     tiempo = request.args.get("tiempo")
 
+    print(f"Parámetros recibidos: parking={parking}, fecha={fecha}, tiempo={tiempo}")
+
     total_precio = 0.0  # Asegurar que el precio es flotante desde el inicio
 
     for item in precios:
         if item["parking"] == parking and item["fecha"] == fecha:
+            print(f"Coincidencia encontrada en JSON: {item}")  # Ver qué valores está encontrando
+
             # Si el tiempo tiene horas y días
             if "hour" in tiempo and "day" in tiempo:
                 try:
                     partes = tiempo.split(" ")
                     horas = int(partes[0]) if "hour" in partes[1] else 0
                     dias = int(partes[2]) if "day" in partes[3] else 0
+
+                    print(f"Horas: {horas}, Días: {dias}")  # Ver valores extraídos correctamente
                     
                     for i in precios:
                         if i["parking"] == parking and i["fecha"] == fecha:
                             if i["tiempo"] == f"{horas} hours":
+                                print(f"Sumando precio de {horas} horas: {i['price']}")
                                 total_precio += float(i["price"])
                             if i["tiempo"] == f"{dias} days":
+                                print(f"Sumando precio de {dias} días: {i['price']}")
                                 total_precio += float(i["price"])
-                    
-                    print(f"Precio total calculado: {total_precio}")  # Debug
+
+                    print(f"Precio total calculado: {total_precio}")  # Ver el precio final
                     return jsonify({"price": total_precio})
 
                 except Exception as e:

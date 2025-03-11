@@ -3,33 +3,39 @@ import requests
 
 app = Flask(__name__)
 
-BASE_URL = "https://ventrex95.github.io/precios_dinamicos"
+JSON_URL_PRECIOS = "https://ventrex95.github.io/precios_dinamicos/precios.json"
+JSON_URL_HORAS = "https://ventrex95.github.io/precios_dinamicos/horas.json"
 
 @app.route("/precio", methods=["GET"])
 def obtener_precio():
-    # Obtener parámetros de la consulta
-    entrada = request.args.get("entrada")  # Fecha y hora de entrada
-    salida = request.args.get("salida")    # Fecha y hora de salida
+    response_precios = requests.get(JSON_URL_PRECIOS)
+    response_horas = requests.get(JSON_URL_HORAS)
+    
+    if response_precios.status_code != 200 or response_horas.status_code != 200:
+        return jsonify({"error": "No se pudo obtener la información"}), 500
+
+    precios = response_precios.json()
+    horas = response_horas.json()
+
     parking = request.args.get("parking")
-    
-    if not entrada or not salida or not parking:
-        return jsonify({"error": "Faltan parámetros requeridos (entrada, salida, parking)"}), 400
-    
-    # Construir la URL dinámica del JSON
-    json_url = f"{BASE_URL}/{entrada}/{salida}.json"
-    
-    # Obtener los datos desde la URL generada
-    response = requests.get(json_url)
-    if response.status_code != 200:
-        return jsonify({"error": "No se pudo obtener la información desde la URL dinámica"}), 500
-    
-    precios = response.json()
-    
-    # Buscar el precio según el parking
+    fecha = request.args.get("fecha")
+    tiempo = request.args.get("tiempo")
+
     for item in precios:
-        if item["parking"] == parking:
-            return jsonify(item)  # Devolver toda la información del JSON si hay coincidencia
-    
+        for hora in horas:
+            if item["parking"] == parking and item["fecha"] == fecha and hora["tiempo"] == tiempo:
+                arrival = f"{item['fecha']} {hora['hora']}"
+                return jsonify({
+                    "priceId": item["priceId"],
+                    "parking": item["parking"],
+                    "fecha": item["fecha"],
+                    "tiempo": item["tiempo"],
+                    "price": item["price"],
+                    "product": item["product"],
+                    "availablePlaces": item["availablePlaces"],
+                    "arrival": arrival
+                })
+
     return jsonify({"error": "No se encontró un precio para esos parámetros"}), 404
 
 if __name__ == "__main__":

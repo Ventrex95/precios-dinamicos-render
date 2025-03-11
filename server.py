@@ -3,28 +3,33 @@ import requests
 
 app = Flask(__name__)
 
-# URL del JSON en GitHub Pages
 JSON_URL = "https://ventrex95.github.io/precios_dinamicos/precios.json"
 
 @app.route("/precio", methods=["GET"])
 def obtener_precio():
-    # Obtener datos actualizados desde GitHub
     response = requests.get(JSON_URL)
     if response.status_code != 200:
         return jsonify({"error": "No se pudo obtener la información"}), 500
-    
+
     precios = response.json()
 
-    # Obtener parámetros de la URL
     parking = request.args.get("parking")
     fecha = request.args.get("fecha")
     tiempo = request.args.get("tiempo")
 
-    # Buscar el precio correspondiente
     for item in precios:
         if item["parking"] == parking and item["fecha"] == fecha and item["tiempo"] == tiempo:
-            return jsonify({"price": item["price"]})
-    
+            # Devolver el JSON completo que contiene todos los detalles
+            return jsonify({
+                "priceId": item["priceId"],
+                "parking": item["parking"],
+                "fecha": item["fecha"],
+                "tiempo": item["tiempo"],
+                "price": item["price"],
+                "product": item["product"],
+                "availablePlaces": item["availablePlaces"]
+            })
+
     return jsonify({"error": "No se encontró un precio para esos parámetros"}), 404
 
 if __name__ == "__main__":

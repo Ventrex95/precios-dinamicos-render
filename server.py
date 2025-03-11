@@ -1,47 +1,35 @@
 from flask import Flask, request, jsonify
 import requests
+import pandas as pd
 
 app = Flask(__name__)
 
 JSON_URL_PRECIOS = "https://ventrex95.github.io/precios_dinamicos/precios.json"
 JSON_URL_HORAS = "https://ventrex95.github.io/precios_dinamicos/horas.json"
 
-@app.route("/precio", methods=["GET"])
-def obtener_precio():
+@app.route("/merged_data", methods=["GET"])
+def obtener_datos_combinados():
     response_precios = requests.get(JSON_URL_PRECIOS)
     response_horas = requests.get(JSON_URL_HORAS)
     
     if response_precios.status_code != 200 or response_horas.status_code != 200:
         return jsonify({"error": "No se pudo obtener la información"}), 500
-
-    precios = response_precios.json()
-    horas = response_horas.json()
-
-    parking = request.args.get("parking")
-    fecha = request.args.get("fecha")
-    tiempo = request.args.get("tiempo")
-
-    print(f"Parametros recibidos: parking={parking}, fecha={fecha}, tiempo={tiempo}")
-    print(f"Datos de precios: {precios}")
-    print(f"Datos de horas: {horas}")
-
-    for item in precios:
-        for hora in horas:
-            print(f"Comparando: item['parking']={item['parking']}, item['fecha']={item['fecha']}, hora['tiempo']={hora['tiempo']}")
-            if item["parking"] == parking and item["fecha"] == fecha and hora["tiempo"] == tiempo:
-                arrival = f"{item['fecha']} {hora['hora']}"
-                return jsonify({
-                    "priceId": item["priceId"],
-                    "parking": item["parking"],
-                    "fecha": item["fecha"],
-                    "tiempo": item["tiempo"],
-                    "price": item["price"],
-                    "product": item["product"],
-                    "availablePlaces": item["availablePlaces"],
-                    "arrival": arrival
-                })
-
-    return jsonify({"error": "No se encontró un precio para esos parámetros"}), 404
+    
+    # Convertir las respuestas JSON en DataFrames de pandas
+    df_precios = pd.DataFrame(response_precios.json())
+    df_horas = pd.DataFrame(response_horas.json())
+    
+    # Agregar una clave temporal a ambos DataFrames
+    df_precios["key"] = 1
+    df_horas["key"] = 1
+    
+    # Realizar el merge
+    df_combined = pd.merge(df_horas, df_precios, on="key").drop("key", axis=1)
+    
+    # Convertir el resultado de vuelta a JSON
+    combined_json = df_combined.to_dict(orient="records")
+    
+    return jsonify(combined_json)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)

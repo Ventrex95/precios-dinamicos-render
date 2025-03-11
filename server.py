@@ -21,8 +21,13 @@ def obtener_precio():
     fecha = request.args.get("fecha")
     tiempo = request.args.get("tiempo")
 
+    print(f"Parametros recibidos: parking={parking}, fecha={fecha}, tiempo={tiempo}")
+    print(f"Datos de precios: {precios}")
+    print(f"Datos de horas: {horas}")
+
     for item in precios:
         for hora in horas:
+            print(f"Comparando: item['parking']={item['parking']}, item['fecha']={item['fecha']}, hora['tiempo']={hora['tiempo']}")
             if item["parking"] == parking and item["fecha"] == fecha and hora["tiempo"] == tiempo:
                 arrival = f"{item['fecha']} {hora['hora']}"
                 return jsonify({
